@@ -1,10 +1,12 @@
 #!/bin/bash
 set -e
 
+
 # Clean up any existing PID files and processes
 echo "Cleaning up any existing Airflow processes..."
-pkill -f "airflow webserver" || true
-pkill -f "airflow scheduler" || true
+command -v pkill >/dev/null && pkill -f "airflow webserver" || true
+command -v pkill >/dev/null && pkill -f "airflow scheduler" || true
+
 rm -f /opt/airflow/airflow-webserver.pid
 rm -f /opt/airflow/airflow-scheduler.pid
 
@@ -13,19 +15,17 @@ sleep 2
 
 # Initialize Airflow database
 echo "Initializing Airflow database..."
-airflow db init
+airflow db migrate 
 
-# Create admin user with admin/admin credentials
-echo "Creating admin user..."
-airflow users create \
-    --username admin \
-    --firstname Admin \
-    --lastname User \
-    --role Admin \
-    --email admin@example.com \
-    --password admin || echo "Admin user already exists"
+# NOTE: The 'airflow users create' command is deprecated in newer versions.
+
 
 # Start webserver and scheduler
-echo "Starting Airflow webserver and scheduler..."
-airflow webserver --port 8080 --daemon &
-airflow scheduler
+#echo "Starting Airflow webserver and scheduler..."
+#airflow webserver --port 8080 --daemon &
+#airflow scheduler
+
+
+# Start Airflow in standalone mode (includes scheduler + API server)
+echo "Starting Airflow in standalone mode..."
+airflow standalone

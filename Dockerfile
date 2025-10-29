@@ -1,4 +1,4 @@
-FROM ghcr.io/astral-sh/uv:python3.14-bookworm AS base
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm AS base
 
 WORKDIR /app
 
@@ -10,6 +10,9 @@ COPY pyproject.toml uv.lock ./
 # since the cache and sync target are on separate file systems.
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
 
+# Create virtual environment
+RUN uv venv
+
 # Install dependencies
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=uv.lock,target=/app/uv.lock \
@@ -19,7 +22,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # Copy source code
 COPY src /app/src
 
-FROM python:3.14.0-slim AS final
+FROM python:3.12.0-slim AS final
 
 EXPOSE 8000
 
@@ -35,6 +38,9 @@ COPY --from=base /app /app
 
 # Add virtual environment to PATH
 ENV PATH="/app/.venv/bin:$PATH"
+
+#Added below line to fix the uvicorn module not found error
+#RUN pip install uvicorn
 
 # Run the application
 CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"] 
